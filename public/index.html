@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatRoom</title>
+</head>
+<body style="text-align: center;">
+    <div>
+        <header>
+            <h1>ChatRoom</h1>
+        </header>
+        <div class="screen">
+            <pre id="messages" style="height: 400px; overflow: scroll; border: 5px solid black;"></pre>
+            <input type="text" placeholder="Your message here" id="messageBox" style="display: block; width: 100%; height: 30px;"/>
+            <button type="submit" id="send" style="width: 100%; height: 30px;">Send</button>
+            <button type="submit" id="note" style="width: 100%; height: 30px;">Note</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const sendBtn = document.querySelector('#send');
+            const messages = document.querySelector('#messages');
+            const messageBox = document.querySelector('#messageBox');
+            const noteBtn = document.querySelector('#note');
+
+        let ws;
+        let from;
+        // function showMessage(message) {
+        //     messages.textContent += `\n\n${message}`;
+        //     messages.scrollTop = messages.scrollHeight;
+        //     messageBox.value = '';
+        // };
+
+        // Send text to all users through the server
+        function sendText(from, data) {
+        // Construct a msg object containing the data the server needs to process the message from the chat client.
+        let msg = {
+            type: from,
+            text: data,// document.getElementById("messageBox").value,
+            //id:   conn,
+            date: Date.now()
+        };
+
+        // Send the msg object as a JSON-formatted string.
+        ws.send(JSON.stringify(msg));
+
+        // Blank the text input element, ready to receive the next line of text from the user.
+        //document.getElementById("messageBox").value = "";
+        messageBox.value = '';
+        messages.scrollTop = messages.scrollHeight;
+        }
+
+        function init() {
+            if (ws) {
+                ws.onerror = ws.onopen = ws.onclose = null;
+                ws.close();
+            }
+            ws = new WebSocket('ws://localhost:5000');
+            ws.onopen = () => {
+                console.log('Connection opened...');
+            }
+            //ws.onmessage = ( { data } ) => sendText();//showMessage(data);
+            //ws.onmessage = function(from) {sendText(from)}
+            ws.onmessage = function(){
+                sendText(from, document.getElementById("messageBox").value)
+            }
+            ws.onclose = function() {
+                ws = null;
+            }
+
+            sendBtn.onclick = function() {
+                if (!ws) {
+                    sendText('No connection...');
+                    return;
+                }
+                data = document.getElementById("messageBox").value
+                from = "msg";
+                sendText(from, data);
+            }
+
+            noteBtn.onclick = function() {
+                if (!ws) {
+                    sendText('No connection...');
+                    return;
+                }
+                data = document.getElementById("messageBox").value
+                from = "note";
+                sendText(from, data);
+            }
+
+        };
+        init();
+    })();
+
+    </script>
+
+</body>
+</html>
