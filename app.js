@@ -16,11 +16,15 @@ const socket = new WebSocket.Server({ server })
 
 socket.on('connection', function connection(ws) {
     ws.on('message', function incoming(data) {
+        if (data == 'note') return // visible or not
         socket.clients.forEach( function each(client) {
             if (client != ws && client.readyState == WebSocket.OPEN) {
                 client.send(data)
             }
         })
+    })
+    ws.on('note', function noting(data, respondWith) {
+        respondWith(data)   
     })
 })
 
